@@ -50,9 +50,9 @@ pub struct Ipv4Hdr {
     /// 针对IP报头的纠错字段， 校验和不计算被封装的数据。
     pub check: u16,
     /// Source Address: here you will find the 32 bit source IP address.
-    pub src_addr: u32,
+    pub src_addr: [u8; 4],
     /// Destination Address: and here’s the 32 bit destination IP address.
-    pub dst_addr: u32,
+    pub dst_addr: [u8; 4],
     // IP Option: this field is not used often, is optional and has a variable length based on the options that were used.
     // When you use this field, the value in the header length field will increase.
     // An example of a possible option is “source route” where the sender requests for a certain routing path.
@@ -111,58 +111,57 @@ impl Ipv4Hdr {
     }
 
     #[inline]
-    pub fn hdrlen(&self) -> usize{
+    pub fn hdrlen(&self) -> usize {
         self.ihl() as usize * 4
     }
 
     #[inline]
-    pub fn is_fragment(&self) -> bool{
+    pub fn is_fragment(&self) -> bool {
         /* The frag_off portion of the header consists of:
-        *
-        * +----+----+----+----------------------------------+
-        * | RS | DF | MF | ...13 bits of fragment offset... |
-        * +----+----+----+----------------------------------+
-        *
-        * If "More fragments" or the offset is nonzero, then this is an IP
-        * fragment (RFC791).
-        */
+         *
+         * +----+----+----+----------------------------------+
+         * | RS | DF | MF | ...13 bits of fragment offset... |
+         * +----+----+----+----------------------------------+
+         *
+         * If "More fragments" or the offset is nonzero, then this is an IP
+         * fragment (RFC791).
+         */
         self.frag_off & 0x3FFF > 0
     }
 
     #[inline]
-    pub fn is_not_first_fragment(&self) -> bool{
+    pub fn is_not_first_fragment(&self) -> bool {
         /* Ignore "More fragments" bit to catch all fragments but the first */
-        self.frag_off & 0x1FFF >0 
+        self.frag_off & 0x1FFF > 0
     }
 
     #[inline]
-    pub fn has_l4_header(&self) -> bool{
+    pub fn has_l4_header(&self) -> bool {
         /* Simply a reverse of ipv4_is_not_first_fragment to avoid double negative. */
-        ! self.is_not_first_fragment()
+        !self.is_not_first_fragment()
     }
 }
-
 
 #[cfg(feature = "std")]
 impl Ipv4Hdr {
     /// Returns the source address field. As network endianness is big endian, we convert it to host endianness.
     pub fn src_addr(&self) -> std::net::Ipv4Addr {
-        std::net::Ipv4Addr::from(u32::from_be(self.src_addr))
+        std::net::Ipv4Addr::from(self.src_addr)
     }
 
     /// Returns the destination address field. As network endianness is big endian, we convert it to host endianness.
     pub fn dst_addr(&self) -> std::net::Ipv4Addr {
-        std::net::Ipv4Addr::from(u32::from_be(self.dst_addr))
+        std::net::Ipv4Addr::from(self.dst_addr)
     }
 
     /// Sets the source address field. As network endianness is big endian, we convert it from host endianness.
     pub fn set_src_addr(&mut self, src: std::net::Ipv4Addr) {
-        self.src_addr = u32::from(src).to_be();
+        self.src_addr = src.octets();
     }
 
     /// Sets the destination address field. As network endianness is big endian, we convert it from host endianness.
     pub fn set_dst_addr(&mut self, dst: std::net::Ipv4Addr) {
-        self.dst_addr = u32::from(dst).to_be();
+        self.dst_addr = dst.octets();
     }
 }
 
