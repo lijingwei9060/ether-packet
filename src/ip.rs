@@ -142,25 +142,25 @@ impl Ipv4Hdr {
     }
 }
 
-#[cfg(feature = "std")]
+
 impl Ipv4Hdr {
     /// Returns the source address field. As network endianness is big endian, we convert it to host endianness.
-    pub fn src_addr(&self) -> std::net::Ipv4Addr {
-        std::net::Ipv4Addr::from(self.src_addr)
+    pub fn src_addr(&self) -> core::net::Ipv4Addr {
+        core::net::Ipv4Addr::from(self.src_addr)
     }
 
     /// Returns the destination address field. As network endianness is big endian, we convert it to host endianness.
-    pub fn dst_addr(&self) -> std::net::Ipv4Addr {
-        std::net::Ipv4Addr::from(self.dst_addr)
+    pub fn dst_addr(&self) -> core::net::Ipv4Addr {
+        core::net::Ipv4Addr::from(self.dst_addr)
     }
 
     /// Sets the source address field. As network endianness is big endian, we convert it from host endianness.
-    pub fn set_src_addr(&mut self, src: std::net::Ipv4Addr) {
+    pub fn set_src_addr(&mut self, src: core::net::Ipv4Addr) {
         self.src_addr = src.octets();
     }
 
     /// Sets the destination address field. As network endianness is big endian, we convert it from host endianness.
-    pub fn set_dst_addr(&mut self, dst: std::net::Ipv4Addr) {
+    pub fn set_dst_addr(&mut self, dst: core::net::Ipv4Addr) {
         self.dst_addr = dst.octets();
     }
 }
