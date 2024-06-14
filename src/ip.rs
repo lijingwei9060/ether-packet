@@ -1,4 +1,4 @@
-use core::mem;
+use core::{mem, net::Ipv6Addr};
 
 use crate::bitfield::BitfieldUnit;
 
@@ -214,10 +214,10 @@ pub struct Ipv6Hdr {
     /// because of some routing error.
     pub hop_limit: u8,
     /// Source Address (128-bits): Source Address is the 128-bit IPv6 address of the original source of the packet.
-    pub src_addr: In6Addr,
+    pub src_addr: Ipv6Addr,
     /// Destination Address (128-bits): The destination Address field indicates the IPv6 address of the final destination(in most cases).
     /// All the intermediate nodes can use this information in order to correctly route the packet.
-    pub dst_addr: In6Addr,
+    pub dst_addr: Ipv6Addr,
     // Extension Headers: In order to rectify the limitations of the IPv4 Option Field, Extension Headers are introduced in IP version 6.
     // The extension header mechanism is a very important part of the IPv6 architecture. The next Header field of IPv6 fixed header points
     // to the first Extension Header and this first extension header points to the second extension header and so on.
@@ -264,37 +264,6 @@ impl Ipv6Hdr {
             version as u64
         });
         bitfield_unit
-    }
-}
-
-#[cfg(feature = "std")]
-impl Ipv6Hdr {
-    /// Returns the source address field. As network endianness is big endian, we convert it to host endianness.
-    pub fn src_addr(&self) -> std::net::Ipv6Addr {
-        std::net::Ipv6Addr::from(u128::from_be_bytes(unsafe { self.src_addr.in6_u.u6_addr8 }))
-    }
-
-    /// Returns the destination address field. As network endianness is big endian, we convert it to host endianness.
-    pub fn dst_addr(&self) -> std::net::Ipv6Addr {
-        std::net::Ipv6Addr::from(u128::from_be_bytes(unsafe { self.dst_addr.in6_u.u6_addr8 }))
-    }
-
-    /// Sets the source address field. As network endianness is big endian, we convert it from host endianness.
-    pub fn set_src_addr(&mut self, src: std::net::Ipv6Addr) {
-        self.src_addr = In6Addr {
-            in6_u: in6_u {
-                u6_addr8: u128::from(src).to_be_bytes(),
-            },
-        };
-    }
-
-    /// Sets the destination address field. As network endianness is big endian, we convert it from host endianness.
-    pub fn set_dst_addr(&mut self, dst: std::net::Ipv6Addr) {
-        self.dst_addr = In6Addr {
-            in6_u: in6_u {
-                u6_addr8: u128::from(dst).to_be_bytes(),
-            },
-        };
     }
 }
 
@@ -605,11 +574,11 @@ pub enum IpProto {
 #[cfg(test)]
 mod tests {
 
-    #[cfg(feature = "std")]
+    
     #[test]
     fn test_v4() {
         use core::mem;
-        use std::net::Ipv4Addr;
+        use core::net::Ipv4Addr;
 
         use crate::ip::Ipv4Hdr;
 
@@ -638,11 +607,11 @@ mod tests {
         assert_eq!(expected_header_bytes, header_bytes);
     }
 
-    #[cfg(feature = "std")]
+    
     #[test]
     fn test_v6() {
         use core::mem;
-        use std::net::Ipv6Addr;
+        use core::net::Ipv6Addr;
 
         use crate::ip::Ipv6Hdr;
 
@@ -655,29 +624,29 @@ mod tests {
             mem::transmute::<[u8; Ipv6Hdr::LEN], _>(expected_header_bytes.try_into().unwrap())
         };
         assert_eq!(
-            ipv6_header.src_addr(),
+            ipv6_header.src_addr,
             Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)
         );
         assert_eq!(
-            ipv6_header.dst_addr(),
+            ipv6_header.dst_addr,
             Ipv6Addr::new(2, 0, 0, 0, 0, 0, 0, 1)
         );
 
         let mut header_bytes = [0u8; 40];
         let ipv6_header: *mut Ipv6Hdr = &mut header_bytes as *mut _ as *mut _;
         unsafe {
-            (*ipv6_header).set_src_addr(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0));
-            (*ipv6_header).set_dst_addr(Ipv6Addr::new(2, 0, 0, 0, 0, 0, 0, 1));
+            (*ipv6_header).src_addr = Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0);
+            (*ipv6_header).dst_addr = Ipv6Addr::new(2, 0, 0, 0, 0, 0, 0, 1);
         }
 
         let ipv6_header: Ipv6Hdr =
             unsafe { mem::transmute::<[u8; Ipv6Hdr::LEN], _>(header_bytes.try_into().unwrap()) };
         assert_eq!(
-            ipv6_header.src_addr(),
+            ipv6_header.src_addr,
             Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)
         );
         assert_eq!(
-            ipv6_header.dst_addr(),
+            ipv6_header.dst_addr,
             Ipv6Addr::new(2, 0, 0, 0, 0, 0, 0, 1)
         );
 
