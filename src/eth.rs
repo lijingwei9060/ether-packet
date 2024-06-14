@@ -1,6 +1,6 @@
 use core::mem;
 
-use crate::{EtherType, Validate};
+use crate::ne::NetEndian;
 
 /// Ethernet header, which is present at the beginning of every Ethernet frame.
 #[repr(C)]
@@ -12,16 +12,9 @@ pub struct EthHdr {
     /// Source MAC address.
     pub src_addr: [u8; 6],
     /// Protocol which is encapsulated in the payload of the frame.
-    pub ether_type: EtherType,
+    pub ether_type: NetEndian<u16>,
 }
 
 impl EthHdr {
     pub const LEN: usize = mem::size_of::<EthHdr>();
-}
-
-
-impl Validate for EthHdr {
-    fn validate(&self) -> bool {
-        self.ether_type == EtherType::Ipv4 || self.ether_type == EtherType::Ipv6
-    }
 }

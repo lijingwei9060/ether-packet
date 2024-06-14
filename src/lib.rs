@@ -108,6 +108,7 @@ pub mod tcp;
 pub mod udp;
 pub mod vlan;
 pub mod vxlan;
+pub mod ne;
 
 /// Protocol which is encapsulated in the payload of the Ethernet frame.
 ///
@@ -116,49 +117,49 @@ pub mod vxlan;
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub enum EtherType {
-    Loop = 0x0060_u16.to_be(),
-    Ipv4 = 0x0800_u16.to_be(),
-    Arp = 0x0806_u16.to_be(),
+    Loop = 0x0060,
+    Ipv4 = 0x0800,
+    Arp = 0x0806,
     /// wake on lan
-    WakeOnLan = 0x0842_u16.to_be(),
+    WakeOnLan = 0x0842,
     /// Cisco Discovery Protocol
-    CDP = 0x2000_u16.to_be(),
+    CDP = 0x2000,
     /// Stream Reservation Protocol
-    SRP = 0x22EA_u16.to_be(),
+    SRP = 0x22EA,
     /// Audio Video Transport Protocol
-    AVTP = 0x22F0_u16.to_be(),
+    AVTP = 0x22F0,
     /// IETF TRILL Protocol
-    TRILL = 0x22F3_u16.to_be(),
+    TRILL = 0x22F3,
     /// DEC MOP RC
-    MOP = 0x6002_u16.to_be(),
+    MOP = 0x6002,
     /// DECnet Phase IV, DNA Routing
-    DECnet = 0x6003_u16.to_be(),
-    DECLAT = 0x6004_u16.to_be(),
+    DECnet = 0x6003,
+    DECLAT = 0x6004,
     /// Reverse Address Resolution Protocol
-    RARP = 0x8035_u16.to_be(),
-    AppleTalk = 0x809B_u16.to_be(),
+    RARP = 0x8035,
+    AppleTalk = 0x809B,
     /// AppleTalk Address Resolution Protocol
-    AARP = 0x80F3_u16.to_be(),
+    AARP = 0x80F3,
     /// VLAN-tagged frame (IEEE 802.1Q) and Shortest Path Bridging IEEE 802.1aq with NNI compatibility
-    VLAN = 0x8100_u16.to_be(),
+    VLAN = 0x8100,
     /// Simple Loop Prevention Protocol
-    SLPP = 0x8102_u16.to_be(),
+    SLPP = 0x8102,
     /// Virtual Link Aggregation Control Protocol
-    VLACP = 0x8103_u16.to_be(),
+    VLACP = 0x8103,
     /// Internet Protocol Version 6
-    Ipv6 = 0x86DD_u16.to_be(),
-    MPLSUnicast = 0x8847_u16.to_be(),
-    MPLSMulticast = 0x8848_u16.to_be(),
+    Ipv6 = 0x86DD,
+    MPLSUnicast = 0x8847,
+    MPLSMulticast = 0x8848,
     /// Ethernet Slow Protocols such as the Link Aggregation Control Protocol (LACP)
-    LACP = 0x8809_u16.to_be(),
+    LACP = 0x8809,
     /// Service VLAN tag identifier (S-Tag) on Q-in-Q tunnel
-    QinQ = 0x88A8_u16.to_be(),
+    QinQ = 0x88A8,
     /// Link Layer Discovery Protocol
-    LLDP = 0x88CC_u16.to_be(),
-    FibreChannel = 0x8906_u16.to_be(),
+    LLDP = 0x88CC,
+    FibreChannel = 0x8906,
     /// RDMA over Converged Ethernet (RoCE)
-    RoCE = 0x8915_u16.to_be(),
-    LoopbackIeee8023 = 0x9000_u16.to_be(),
+    RoCE = 0x8915,
+    LoopbackIeee8023 = 0x9000,
 }
 
 impl TryFrom<u16> for EtherType {
