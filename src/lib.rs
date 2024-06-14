@@ -208,7 +208,3 @@ impl EtherType{
         self == &EtherType::VLAN || self == &EtherType::QinQ
     }
 }
-pub trait Validate {
-    /// Returns true if the header is valid, false otherwise.
-    fn validate(&self) -> bool;
-}

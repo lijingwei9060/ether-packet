@@ -1,6 +1,6 @@
 use core::mem;
 
-use crate::{bitfield::BitfieldUnit, EtherType, Validate};
+use crate::{bitfield::BitfieldUnit, EtherType};
 
 /// QinQHdr Ethernet header, which is present at the beginning of every Ethernet frame.
 #[repr(C)]
@@ -21,11 +21,4 @@ pub struct QinQHdr {
 
 impl QinQHdr {
   pub const LEN: usize = mem::size_of::<QinQHdr>();
-}
-
-
-impl Validate for QinQHdr {
-    fn validate(&self) -> bool {
-        self.service_tpid == EtherType::QinQ as u16 && self.tpid == EtherType::VLAN as u16
-    }
 }

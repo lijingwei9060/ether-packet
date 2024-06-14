@@ -1,6 +1,6 @@
 use core::mem;
 
-use crate::{bitfield::BitfieldUnit, EtherType, Validate};
+use crate::{bitfield::BitfieldUnit, EtherType};
 
 /// Vlan Ethernet header, which is present at the beginning of every Ethernet frame.
 #[repr(C)]
@@ -72,11 +72,5 @@ impl VlanHdr {
             let val: u8 = mem::transmute(val);
             self.tci.set(13usize, 3u8, val as u64)
         }
-    }
-}
-
-impl Validate for VlanHdr {
-    fn validate(&self) -> bool {
-        return true;
     }
 }
