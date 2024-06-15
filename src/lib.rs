@@ -109,6 +109,7 @@ pub mod udp;
 pub mod vlan;
 pub mod vxlan;
 pub mod ne;
+pub mod types;
 
 /// Protocol which is encapsulated in the payload of the Ethernet frame.
 ///
