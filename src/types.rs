@@ -1,4 +1,4 @@
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default, PartialOrd, Ord)]
 pub struct U16 {
     octets: [u8; 2],
 }
@@ -38,7 +38,7 @@ impl From<u16> for U16 {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default, PartialOrd, Ord)]
 pub struct U32 {
     octets: [u8; 4],
 }
@@ -80,7 +80,7 @@ impl From<u32> for U32 {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default, PartialOrd, Ord)]
 pub struct U64 {
     octets: [u8; 8],
 }
