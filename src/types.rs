@@ -110,7 +110,7 @@ impl U64 {
     }
 
     /// Returns the eight eight-bit integers.
-    #[inline]
+    #[inline(always)]
     pub const fn octets(&self) -> [u8; 8] {
         self.octets
     }

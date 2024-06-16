@@ -89,25 +89,24 @@ impl TryFrom<u16> for EtherType {
     }
 }
 
-impl Default  for EtherType{
+impl Default for EtherType {
     fn default() -> Self {
         EtherType::Ipv4
     }
 }
 
-impl TryFrom<U16> for EtherType{
+impl TryFrom<U16> for EtherType {
     type Error = ();
     fn try_from(value: U16) -> Result<Self, Self::Error> {
         Self::try_from(value.to_bits())
     }
 }
 
-impl EtherType{
-    pub fn is_vlan(&self) -> bool{
+impl EtherType {
+    pub fn is_vlan(&self) -> bool {
         self == &EtherType::VLAN || self == &EtherType::QinQ
     }
 }
-
 
 /// Ethernet header, which is present at the beginning of every Ethernet frame.
 #[repr(C, packed)]
@@ -126,7 +125,6 @@ impl EthHdr {
     pub const LEN: usize = mem::size_of::<EthHdr>();
 }
 
-
 /// QinQHdr Ethernet header, which is present at the beginning of every Ethernet frame.
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -136,16 +134,16 @@ pub struct QinQHdr {
     pub dst_addr: [u8; 6],
     /// Source MAC address.
     pub src_addr: [u8; 6],
-    pub service_tpid: u16,
-    pub _bitfield_0: BitfieldUnit<[u8; 2usize]>,
-    pub tpid: u16,
-    pub _bitfield_1: BitfieldUnit<[u8; 2usize]>,
+    pub service_tpid: U16,
+    pub etci: BitfieldUnit<[u8; 2usize]>,
+    pub tpid: U16,
+    pub tci: BitfieldUnit<[u8; 2usize]>,
     /// Protocol which is encapsulated in the payload of the frame.
-    pub ether_type: EtherType,
+    pub ether_type: U16,
 }
 
 impl QinQHdr {
-  pub const LEN: usize = mem::size_of::<QinQHdr>();
+    pub const LEN: usize = mem::size_of::<QinQHdr>();
 }
 
 /// Vlan Ethernet header, which is present at the beginning of every Ethernet frame.
@@ -153,8 +151,34 @@ impl QinQHdr {
 #[derive(Debug, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct VlanHdr {
-    pub _bitfield_align_1: [u8; 0],
-    /// tag control information
+    /// Destination MAC address.
+    pub dst_addr: [u8; 6],
+    /// Source MAC address.
+    pub src_addr: [u8; 6],
+    /// Tag protocol identifier (TPID)
+    ///
+    /// A 16-bit field set to a value of 0x8100[b] in order to identify the frame
+    /// as an IEEE 802.1Q-tagged frame. This field is located at the same position
+    /// as the EtherType field in untagged frames, and is thus used to distinguish
+    /// the frame from untagged frames.
+    pub tpid: U16,
+    /// tag control information: A 16-bit field containing the following sub-fields:
+    /// - **Priority code point (PCP)**: A 3-bit field which refers to the IEEE 802.1p
+    /// class of service (CoS) and maps to the frame priority level. Different PCP values
+    /// can be used to prioritize different classes of traffic.
+    /// - **Drop eligible indicator (DEI)**: A 1-bit field. (formerly CFI) May be used
+    /// separately or in conjunction with PCP to indicate frames eligible to be dropped
+    /// in the presence of congestion.
+    /// - **VLAN identifier (VID)**: A 12-bit field specifying the VLAN to which the
+    /// frame belongs. The values of 0 and 4095 (0x000 and 0xFFF in hexadecimal) are
+    /// reserved. All other values may be used as VLAN identifiers, allowing up to
+    /// 4,094 VLANs. The reserved value 0x000 indicates that the frame does not
+    /// carry a VLAN ID; in this case, the 802.1Q tag specifies only a priority
+    /// (in PCP and DEI fields) and is referred to as a priority tag. On bridges,
+    /// VID 0x001 (the default VLAN ID) is often reserved for a network management
+    /// VLAN; this is vendor-specific. The VID value 0xFFF is reserved for implementation
+    /// use; it must not be configured or transmitted. 0xFFF can be used to indicate
+    /// a wildcard match in management operations or filtering database entries.
     pub tci: BitfieldUnit<[u8; 2usize]>,
     /// Protocol which is encapsulated in the payload of the frame.
     pub ether_type: EtherType,
@@ -169,36 +193,22 @@ impl VlanHdr {
     /// The VLAN ID is in the range from 0 to 4095. The values 0 and 4095 are reserved, and therefore available VLAN IDs are in the range from 1 to 4094.
     #[inline]
     pub fn vid(&self) -> u16 {
-        unsafe { mem::transmute(self.tci.get(0usize, 12u8) as u16) }
+        self.tci.get(0usize, 12u8) as u16
     }
 
     #[inline]
     pub fn set_vid(&mut self, val: u16) {
-        unsafe {
-            let val: u16 = mem::transmute(val);
-            self.tci.set(0usize, 12u8, val as u64)
-        }
-    }
-
-    /// Canonical Format Indicator (CFI), indicating whether a MAC address is encapsulated in canonical format over different transmission media.
-    /// CFI is used to ensure compatibility between Ethernet and token ring networks.
-    ///
-    /// 1bit
-    ///
-    /// The value 0 indicates that the MAC address is encapsulated in canonical format,
-    /// and the value 1 indicates that the MAC address is encapsulated in non-canonical format.
-    /// The CFI field has a fixed value of 0 on Ethernet networks.
-    #[inline]
-    pub fn cfi(&self) -> u8 {
-        unsafe { mem::transmute(self.tci.get(12usize, 1u8) as u8) }
+        self.tci.set(0usize, 12u8, val as u64)
     }
 
     #[inline]
-    pub fn set_cfi(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = mem::transmute(val);
-            self.tci.set(12usize, 1u8, val as u64)
-        }
+    pub fn dei(&self) -> bool {
+        self.tci.get_bit(12)
+    }
+
+    #[inline]
+    pub fn set_cfi(&mut self, val: bool) {
+        self.tci.set(12usize, 1u8, if val { 1 } else { 0 } as u64)
     }
 
     /// Priority code point (PCP), indicating the 802.1p priority of a frame.
@@ -209,15 +219,12 @@ impl VlanHdr {
     /// If congestion occurs, the switch sends packets with the highest priority first.
     #[inline]
     pub fn pcp(&self) -> u8 {
-        unsafe { mem::transmute(self.tci.get(13usize, 3u8) as u8) }
+        self.tci.get(13usize, 3u8) as u8
     }
 
     #[inline]
     pub fn set_pcp(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = mem::transmute(val);
-            self.tci.set(13usize, 3u8, val as u64)
-        }
+        self.tci.set(13usize, 3u8, val as u64)
     }
 }
 
@@ -225,8 +232,8 @@ impl VlanHdr {
 mod test {
     use core::mem;
 
-    use super::EtherType;
     use super::EthHdr;
+    use super::EtherType;
 
     #[test]
     fn validate_etherheader() {
@@ -237,9 +244,8 @@ mod test {
             0x08, 0x00, // 协议类型 (IPv4, 大端字节序)
         ];
 
-        let ethhdr: EthHdr = unsafe {
-            mem::transmute::<[u8; EthHdr::LEN], _>(data_stream.try_into().unwrap())
-        };
+        let ethhdr: EthHdr =
+            unsafe { mem::transmute::<[u8; EthHdr::LEN], _>(data_stream.try_into().unwrap()) };
 
         assert_eq!(ethhdr.ether_type.to_bits(), EtherType::Ipv4 as u16);
         assert_eq!(ethhdr.dst_addr, [0xFF_u8, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
