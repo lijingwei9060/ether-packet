@@ -123,6 +123,11 @@ pub struct EthHdr {
 
 impl EthHdr {
     pub const LEN: usize = mem::size_of::<EthHdr>();
+
+    #[inline(always)]
+    pub fn ether_type(&self) -> Option<EtherType> {
+        self.ether_type.try_into().ok()
+    }
 }
 
 /// QinQHdr Ethernet header, which is present at the beginning of every Ethernet frame.
@@ -144,6 +149,10 @@ pub struct QinQHdr {
 
 impl QinQHdr {
     pub const LEN: usize = mem::size_of::<QinQHdr>();
+    #[inline(always)]
+    pub fn ether_type(&self) -> Option<EtherType> {
+        self.ether_type.try_into().ok()
+    }
 }
 
 /// Vlan Ethernet header, which is present at the beginning of every Ethernet frame.
@@ -181,7 +190,7 @@ pub struct VlanHdr {
     /// a wildcard match in management operations or filtering database entries.
     pub tci: BitfieldUnit<[u8; 2usize]>,
     /// Protocol which is encapsulated in the payload of the frame.
-    pub ether_type: EtherType,
+    pub ether_type: U16,
 }
 
 impl VlanHdr {
@@ -225,6 +234,11 @@ impl VlanHdr {
     #[inline]
     pub fn set_pcp(&mut self, val: u8) {
         self.tci.set(13usize, 3u8, val as u64)
+    }
+
+    #[inline(always)]
+    pub fn ether_type(&self) -> Option<EtherType> {
+        self.ether_type.try_into().ok()
     }
 }
 
