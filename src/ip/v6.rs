@@ -9,7 +9,6 @@ use super::IpProto;
 #[derive(Copy, Clone)]
 #[cfg_attr(features = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct Ipv6Hdr {
-    pub _bitfield_align_1: [u8; 0],
     /// Version (4-bits): Indicates version of Internet Protocol which contains bit sequence 0110.
     /// Traffic Class (8-bits): The Traffic Class field indicates class or priority of IPv6 packet which is similar to Service Field in IPv4 packet.
     /// It helps routers to handle the traffic based on the priority of the packet. If congestion occurs on the router then packets with the least priority will be discarded.

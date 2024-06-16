@@ -87,6 +87,11 @@ pub struct Ipv4Hdr {
     /// Identification: If the IP packet is fragmented then each fragmented packet will use the same 16 bit identification number to identify to which IP packet they belong to.
     /// 如果数据包原始长度超过数据包所要经过的数据链路的最大传输单元（MTU），那么必须将数据包分段为更小的数据包。
     pub id: U16,
+    /// ```text
+    ///  +----+----+----+----------------------------------+
+    ///  | RS | DF | MF | ...13 bits of fragment offset... |
+    ///  +----+----+----+----------------------------------+
+    ///  ```
     /// IP Flags: These 3 bits are used for fragmentation:
     /// - The first bit is always set to 0.
     /// - The second bit is called the DF (Don’t Fragment) bit and indicates that this packet should not be fragmented.
@@ -95,12 +100,12 @@ pub struct Ipv4Hdr {
     /// - The third bit is called the MF (More Fragments) bit and is set on all fragmented packets except the last one.
     ///
     /// Fragment Offset: this 13 bit field specifies the position of the fragment in the original fragmented IP packet.
-    /// 以8个八位组为单位，用于指明分段起始点相对于报头起始点的偏移量。
+    /// 以8个八位组(64bit)为单位，用于指明分段起始点相对于报头起始点的偏移量。第一个片段的偏移量为0。
     pub frag_off: BitfieldUnit<[u8; 2usize]>,
     /// Time to Live: Everytime an IP packet passes through a router, the time to live field is decremented by 1.
     /// Once it hits 0 the router will drop the packet and sends an ICMP time exceeded message to the sender.
     /// The time to live field has 8 bits and is used to prevent packets from looping around forever (if you have a routing loop).
-    /// Default to 64.
+    /// Default to 64, measured in units of seconds.
     pub ttl: u8,
     /// Protocol: this 8 bit field tells us which protocol is enapsulated in the IP packet, for example TCP has value 6 and UDP has value 17.
     pub proto: IpProto,
@@ -172,17 +177,16 @@ impl Ipv4Hdr {
         self.frag_off.get_bit(14)
     }
 
+    /// The frag_off portion of the header consists of:
+    /// ```text
+    ///  +----+----+----+----------------------------------+
+    ///  | RS | DF | MF | ...13 bits of fragment offset... |
+    ///  +----+----+----+----------------------------------+
+    ///  ```
+    ///  If "More fragments" or the offset is nonzero, then this is an IP
+    ///  fragment (RFC791).
     #[inline]
     pub fn is_fragment(&self) -> bool {
-        /* The frag_off portion of the header consists of:
-         *
-         * +----+----+----+----------------------------------+
-         * | RS | DF | MF | ...13 bits of fragment offset... |
-         * +----+----+----+----------------------------------+
-         *
-         * If "More fragments" or the offset is nonzero, then this is an IP
-         * fragment (RFC791).
-         */
         // 0x3FFF
         self.frag_off.get(0, 14) > 0
     }
@@ -267,6 +271,39 @@ impl Ipv4HdrOptionType {
     #[inline]
     pub fn option_number(&self) -> u8 {
         self.octets.get(0, 5) as u8
+    }
+
+    #[inline]
+    pub fn is_end_of_option_list(&self) -> bool {
+        self.option_number() == 0 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_no_operation(&self) -> bool {
+        self.option_number() == 1 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_security(&self) -> bool {
+        self.option_number() == 2 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_loose_source_routing(&self) -> bool {
+        self.option_number() == 3 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_strict_source_routing(&self) -> bool {
+        self.option_number() == 9 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_record_route(&self) -> bool {
+        self.option_number() == 7 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_stream_id(&self) -> bool {
+        self.option_number() == 8 && self.option_class() == 0
+    }
+    #[inline]
+    pub fn is_internet_timestamp(&self) -> bool {
+        self.option_number() == 4 && self.option_class() == 2
     }
 }
 
