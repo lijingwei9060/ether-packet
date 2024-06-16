@@ -2,11 +2,13 @@ use core::mem;
 
 pub const ICMP_HDR_LEN: usize = mem::size_of::<IcmpHdr>();
 
+//todo: https://datatracker.ietf.org/doc/html/rfc792
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(::serde::Serialize, ::serde::Deserialize))]
 pub struct IcmpHdr {
-    pub type_: u8,
+    pub r#type: u8,
     pub code: u8,
     pub checksum: u16,
     pub un: IcmpHdrUn,
